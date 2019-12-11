@@ -6,8 +6,6 @@ import java.lang.Double;
 public class Acquisitor {
     private Vector<Double> x = new Vector<>();
     private Vector<Double> y = new Vector<>();
-    private int indexX = 0;
-    private int indexY = 0;
 
     public void addX(Double value) {
         x.add(value);
@@ -17,20 +15,12 @@ public class Acquisitor {
         y.add(value);
     }
 
-    public Double getX() {
-        return x.get(indexX);
+    public Double getX(int index) {
+        return x.get(index);
     }
 
-    public Double getY() {
-        return y.get(indexY);
-    }
-
-    public Double previousX() {
-        return x.get(indexX - 1);
-    }
-
-    public Double previousY() {
-        return y.get(indexY - 1);
+    public Double getY(int index) {
+        return y.get(index);
     }
 
     public Double originX() {

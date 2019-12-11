@@ -1,6 +1,10 @@
 package com.totalcross.agralapp;
 import totalcross.ui.MainWindow;
+import totalcross.ui.gfx.Color;
 import totalcross.ui.Label;
+
+import com.totalcross.agralapp.gfx.CameraContainer;
+
 import totalcross.sys.Settings;
 public class AgralApp extends MainWindow {
     
@@ -10,7 +14,8 @@ public class AgralApp extends MainWindow {
 
     @Override
     public void initUI() {
-        Label helloWord = new Label("Hello World!");
-        add(helloWord, CENTER, CENTER);
+        CameraContainer cameraContainer = new CameraContainer();
+        cameraContainer.setLineColor(Color.GREEN);
+        add(cameraContainer, LEFT, TOP, SCREENSIZE, SCREENSIZE);
     }
 }

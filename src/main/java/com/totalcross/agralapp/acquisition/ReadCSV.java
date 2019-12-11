@@ -1,13 +1,12 @@
+package com.totalcross.agralapp.acquisition;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class ReadCSV {
 
-	public static Acquisitor read (String path) {
+	public static Acquisitor read(String path) throws NumberFormatException, IOException {
 		// open file input stream
 		BufferedReader reader = new BufferedReader(new FileReader(path));
 

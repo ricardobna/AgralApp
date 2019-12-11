@@ -30,4 +30,12 @@ public class Acquisitor {
     public Double originY() {
         return y.get(0);
     }
+
+    /***
+     * Returns the size of the Vector, if x and y don't have the same amount of points it returns -1;
+     * @return size
+     */
+    public int size() {
+        return x.size() == y.size() ? x.size() : -1;
+    }
 }

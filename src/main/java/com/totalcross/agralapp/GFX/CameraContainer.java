@@ -7,6 +7,7 @@ import com.totalcross.agralapp.acquisition.Acquisitor;
 import com.totalcross.agralapp.acquisition.ReadCSV;
 
 import totalcross.ui.ClippedContainer;
+import totalcross.ui.gfx.Coord;
 import totalcross.ui.gfx.Graphics;
 import totalcross.util.UnitsConverter;
 
@@ -34,24 +35,29 @@ public class CameraContainer extends ClippedContainer {
     @Override
     public void onPaint(Graphics g) {
         //Draws the line to try and focus
+        int scale = 10;
         for (int i = 1; i < this.points.size(); i++) {
-            g.drawLine(Math.round(this.points.getX(i - 1).floatValue()), Math.round(this.points.getY(i - 1).floatValue())
-                     , Math.round(this.points.getX(i).floatValue()), Math.round(this.points.getY(i).floatValue()));
+            drawSection(new Coord(this.points.getX(i - 1).intValue() * scale, this.points.getY(i - 1).intValue() * scale)
+            , new Coord(this.points.getX(i).intValue() * scale, this.points.getY(i).intValue() * scale), 20, i == 1);
         }
-        for(int i = 0; i < this.points.size(); i++) {
-            updatePolygons(Math.round(this.points.getX(i).floatValue())
-                         , Math.round(this.points.getY(i).floatValue()));
-        }
+        // for(int i = 0; i < this.points.size(); i++) {
+        //     updatePolygons(Math.round(this.points.getX(i).floatValue())
+        //                  , Math.round(this.points.getY(i).floatValue()));
+        // }
+        System.out.println();
         int oldColor = g.backColor;
         g.backColor = this.lineColor;
-        g.fillPolygon(getVertices(polygonVerticesX), getVertices(polygonVerticesY), polygonVerticesX.size());
+        for(int i = 3; i < this.polygonVerticesX.size(); i += 2) {
+            System.out.println(getVertices(this.polygonVerticesX, i).toString());
+            g.fillPolygon(getVertices(this.polygonVerticesX, i), getVertices(this.polygonVerticesY, i), 4);
+        }
         g.backColor = oldColor;
     }
 
-    private int[] getVertices(Vector<Integer> vertices) {
-        int[] vertexes = new int[vertices.size()];
-        for(int i = 0; i < vertices.size(); i++) {
-            vertexes[i] = vertices.get(i);
+    private int[] getVertices(Vector<Integer> vertices, int index) {
+        int[] vertexes = new int[4];
+        for(int i = 0; i < 4; i++) {
+            vertexes[i] = vertices.get(index - i);
         }
         return vertexes;
     }
@@ -60,27 +66,10 @@ public class CameraContainer extends ClippedContainer {
         //Translocates the vehicle position to 0, and making the new point translocate the same amount
         int transformedNewX = newX - this.vehicleX;
         int transformedNewY = newY - this.vehicleY;
-        //Getting the needed amount to scale to 10 DP
-        float scaleX;
-        float scaleY;
-        if(transformedNewX != 0) {
-            scaleX = UnitsConverter.toPixels(DP + 10)/transformedNewX;
-        } else if(this.vehicleX != 0) {
-            scaleX = UnitsConverter.toPixels(DP + 10)/this.vehicleX;
-        } else {
-            scaleX = UnitsConverter.toPixels(DP + 10);
-        }
-        if(transformedNewX != 0) {
-            scaleY = UnitsConverter.toPixels(DP + 10)/transformedNewY;
-        } else if(this.vehicleX != 0) {
-            scaleY = UnitsConverter.toPixels(DP + 10)/this.vehicleY;
-        } else {
-            scaleY = UnitsConverter.toPixels(DP + 10);
-        }
         //Rotating the point by m rad and scaling
         double m = Math.acos(((double)newY - this.vehicleY)/(newX - this.vehicleX));
-        transformedNewX = Math.round((float)((transformedNewX * Math.cos(m) - transformedNewY * Math.sin(m))) * scaleX);
-        transformedNewY = Math.round((float)((transformedNewX * Math.sin(m) + transformedNewY * Math.cos(m))) * scaleY);
+        transformedNewX = Math.round((float)((transformedNewX * Math.cos(m) - transformedNewY * Math.sin(m))));
+        transformedNewY = Math.round((float)((transformedNewX * Math.sin(m) + transformedNewY * Math.cos(m))));
 
         //Now we rotate back and translocate it to its original position;
         int firstXToAdd = transformedNewY;
@@ -109,6 +98,30 @@ public class CameraContainer extends ClippedContainer {
 
     public void setLineColor(int lineColor) {
         this.lineColor = lineColor;
+    }
+    
+    public void drawSection(Coord c1, Coord c2, int diameter, boolean isFirst) {
+        double cosAlpha = (c1.y - c2.y)/Math.sqrt(Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y, 2));
+        double senAlpha = (c1.x - c2.x)/Math.sqrt(Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y, 2));
+    
+        Coord p1 = new Coord((int) (c2.x + cosAlpha*(diameter/2)), (int ) (c2.y - senAlpha*(diameter/2)));
+        Coord p2 = new Coord((int) (c2.x - cosAlpha*(diameter/2)), (int ) (c2.y + senAlpha*(diameter/2)));
+        Coord p3 = new Coord((int) (c1.x - cosAlpha*(diameter/2)), (int ) (c1.y + senAlpha*(diameter/2)));
+        Coord p4 = new Coord((int) (c1.x + cosAlpha*(diameter/2)), (int ) (c1.y - senAlpha*(diameter/2)));
+        if(isFirst) {
+            this.polygonVerticesX.add(new Integer(p3.x));
+            this.polygonVerticesX.add(new Integer(p4.x));
+            this.polygonVerticesY.add(new Integer(p3.y));
+            this.polygonVerticesY.add(new Integer(p4.y));
+        }
+        this.polygonVerticesX.add(new Integer(p1.x));
+        this.polygonVerticesY.add(new Integer(p1.y));
+        this.polygonVerticesX.add(new Integer(p2.x));
+        this.polygonVerticesY.add(new Integer(p2.y));
+        // g.backColor = lineColor;
+        // g.fillPolygon(new int[] {p1.x, p2.x, p3.x, p4.x}, new int[] {p1.y, p2.y, p3.y, p4.y}, 4);
+        // g.backColor = 0;
+        // g.drawThickLine(c1.x, c1.y, c2.x, c2.y, 5);
     }
 
 }

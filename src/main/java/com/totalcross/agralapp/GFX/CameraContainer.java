@@ -7,10 +7,9 @@ import com.totalcross.agralapp.acquisition.Acquisitor;
 import com.totalcross.agralapp.acquisition.ReadCSV;
 import com.totalcross.agralapp.view.MathUtils;
 
-import tc.tools.converter.i;
-import totalcross.sys.Settings;
 import totalcross.ui.ClippedContainer;
 import totalcross.ui.MainWindow;
+import totalcross.ui.Window;
 import totalcross.ui.event.UpdateListener;
 import totalcross.ui.gfx.Color;
 import totalcross.ui.gfx.Coord;
@@ -21,11 +20,13 @@ public class CameraContainer extends ClippedContainer {
     private int lineColor;
     Acquisitor points;
     int index = 1;
-    int millisecondsToUpdate = 50;
+    int millisecondsToUpdate = 100;
     int elapsedMilliseconds = 0;
     Coord[] oldSquare = null;
-    int scale = 30;
-    int bladeWidth = 20;
+    int scale = 300;
+    int bladeWidth = 160;
+    int xVariation;
+    int yVariation;
     Vector<int[][]> polygonsToDraw = new Vector<>(20);
     UpdateListener updateListener = new UpdateListener(){
         
@@ -34,8 +35,15 @@ public class CameraContainer extends ClippedContainer {
             CameraContainer.this.elapsedMilliseconds += elapsedMilliseconds;
             if (CameraContainer.this.elapsedMilliseconds >= millisecondsToUpdate) {
                 CameraContainer.this.elapsedMilliseconds = 0;
+                if(polygonsToDraw == null) {
+                    polygonsToDraw = new Vector<>(20);
+                }
                 polygonsToDraw.add(getPolygonToDraw(index));
-                repaintNow();
+                xVariation = CameraContainer.this.getWidth()/2 - Math.round(CameraContainer.this.points.getX(index).floatValue() * scale);
+                yVariation = CameraContainer.this.getHeight()/2 - Math.round(CameraContainer.this.points.getY(index).floatValue() * scale);
+                
+                Window.repaintActiveWindows();
+                // repaint();
                 index++;
                 if (index > points.size() - 1) {
                     MainWindow.getMainWindow().removeUpdateListener(updateListener);
@@ -58,11 +66,11 @@ public class CameraContainer extends ClippedContainer {
     @Override
     public void onPaint(Graphics g) {
         //Draws the line to try and focus
-        
+        g.fillRect(0, 0, getWidth(), getHeight());
         int oldColor = g.backColor;
         g.backColor = this.lineColor;
-        for (int[][] polygon: polygonsToDraw) {
-            g.fillPolygon(polygon[0], polygon[1], polygon[0].length);
+        for (int[][] polygon : polygonsToDraw) {
+            fillTranslatedPolygon(xVariation, yVariation, g, polygon);
         }
         g.backColor = oldColor;
         // drawSupportingLine(g);
@@ -74,6 +82,7 @@ public class CameraContainer extends ClippedContainer {
 
     private int[][] getPolygonToDraw(int index) {
         int[][] coord;
+        
         Coord[] square = MathUtils.getSquarePoints(new Coord(Math.round(points.getX(index - 1).floatValue()*scale), Math.round(points.getY(index - 1).floatValue()*scale))
                                 , new Coord(Math.round(points.getX(index).floatValue()*scale), Math.round(points.getY(index).floatValue()*scale))
                                 , bladeWidth);
@@ -103,5 +112,15 @@ public class CameraContainer extends ClippedContainer {
             g.drawThickLine(i, 0, i, getHeight(), 5);
         }
     }
-}
 
+    private void fillTranslatedPolygon(int xVariation, int yVariation, Graphics g, int[][] polygon) {
+        int[] xPolygon = new int[polygon[0].length];
+        int[] yPolygon = new int[polygon[1].length];
+        for(int i = 0; i < polygon[0].length; i++) {
+            xPolygon[i] = polygon[0][i] + xVariation;
+            yPolygon[i] = polygon[1][i] + yVariation;
+        }
+        g.fillPolygon(xPolygon, yPolygon, xPolygon.length);
+    }
+
+}

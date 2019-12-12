@@ -7,6 +7,7 @@ import com.totalcross.agralapp.acquisition.Acquisitor;
 import com.totalcross.agralapp.acquisition.ReadCSV;
 import com.totalcross.agralapp.view.MathUtils;
 
+import totalcross.sys.Vm;
 import totalcross.ui.ClippedContainer;
 import totalcross.ui.MainWindow;
 import totalcross.ui.Window;
@@ -27,6 +28,10 @@ public class CameraContainer extends ClippedContainer {
     int bladeWidth = 160;
     int xVariation;
     int yVariation;
+    double cos;
+    double sin;
+    int lastPolygonX;
+    int lastPolygonY;
     Vector<int[][]> polygonsToDraw = new Vector<>(20);
     UpdateListener updateListener = new UpdateListener(){
         
@@ -41,7 +46,9 @@ public class CameraContainer extends ClippedContainer {
                 polygonsToDraw.add(getPolygonToDraw(index));
                 xVariation = CameraContainer.this.getWidth()/2 - Math.round(CameraContainer.this.points.getX(index).floatValue() * scale);
                 yVariation = CameraContainer.this.getHeight()/2 - Math.round(CameraContainer.this.points.getY(index).floatValue() * scale);
-                
+                double distance = (Math.sqrt(Math.pow(CameraContainer.this.getHeight()/2 - lastPolygonY, 2) + Math.pow(CameraContainer.this.getWidth()/2 - lastPolygonX, 2)));
+                sin = (CameraContainer.this.getHeight()/2 - lastPolygonY) / distance;
+                cos = (CameraContainer.this.getWidth()/2 - lastPolygonX) / distance;
                 Window.repaintActiveWindows();
                 // repaint();
                 index++;
@@ -101,6 +108,8 @@ public class CameraContainer extends ClippedContainer {
                     new int[] {square[0].x, square[3].x, square[2].x, square[1].x}, 
                     new int[] {square[0].y, square[3].y, square[2].y, square[1].y}};
         }
+        lastPolygonY = square[2].y;
+        lastPolygonX = square[2].x;
         oldSquare = square;
         return coord;
     }
@@ -119,6 +128,13 @@ public class CameraContainer extends ClippedContainer {
         for(int i = 0; i < polygon[0].length; i++) {
             xPolygon[i] = polygon[0][i] + xVariation;
             yPolygon[i] = polygon[1][i] + yVariation;
+            xPolygon[i] -= getWidth()/2; 
+            yPolygon[i] -= getHeight()/2;
+            xPolygon[i] = Math.round((float)(xPolygon[i] * cos - yPolygon[i] * sin));
+            yPolygon[i] = Math.round((float)(xPolygon[i] * sin + yPolygon[i] * cos));
+            xPolygon[i] += getWidth()/2;
+            yPolygon[i] += getHeight()/2;
+            
         }
         g.fillPolygon(xPolygon, yPolygon, xPolygon.length);
     }

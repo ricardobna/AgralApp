@@ -1,7 +1,6 @@
 package com.totalcross.agralapp;
 import totalcross.ui.MainWindow;
 import totalcross.ui.gfx.Color;
-import totalcross.ui.Label;
 
 import com.totalcross.agralapp.gfx.CameraContainer;
 

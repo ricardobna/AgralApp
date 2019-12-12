@@ -7,22 +7,25 @@ import com.totalcross.agralapp.acquisition.Acquisitor;
 import com.totalcross.agralapp.acquisition.ReadCSV;
 import com.totalcross.agralapp.view.MathUtils;
 
+import tc.tools.converter.i;
+import totalcross.sys.Settings;
 import totalcross.ui.ClippedContainer;
 import totalcross.ui.MainWindow;
 import totalcross.ui.event.UpdateListener;
+import totalcross.ui.gfx.Color;
 import totalcross.ui.gfx.Coord;
 import totalcross.ui.gfx.Graphics;
-import totalcross.ui.media.Camera;
 
 public class CameraContainer extends ClippedContainer {
     
     private int lineColor;
     Acquisitor points;
     int index = 1;
-    int millisecondsToUpdate = 400;
+    int millisecondsToUpdate = 50;
     int elapsedMilliseconds = 0;
     Coord[] oldSquare = null;
     int scale = 30;
+    int bladeWidth = 20;
     Vector<int[][]> polygonsToDraw = new Vector<>(20);
     UpdateListener updateListener = new UpdateListener(){
         
@@ -62,10 +65,7 @@ public class CameraContainer extends ClippedContainer {
             g.fillPolygon(polygon[0], polygon[1], polygon[0].length);
         }
         g.backColor = oldColor;
-        for (int i = 1; i < this.points.size(); i++) {
-            g.drawLine(Math.round(this.points.getX(i - 1).floatValue()*scale), Math.round(this.points.getY(i - 1).floatValue()*scale)
-                        , Math.round(this.points.getX(i).floatValue()*scale), Math.round(this.points.getY(i).floatValue()*scale));
-        }
+        // drawSupportingLine(g);
     }
 
     public void setLineColor(int lineColor) {
@@ -76,24 +76,32 @@ public class CameraContainer extends ClippedContainer {
         int[][] coord;
         Coord[] square = MathUtils.getSquarePoints(new Coord(Math.round(points.getX(index - 1).floatValue()*scale), Math.round(points.getY(index - 1).floatValue()*scale))
                                 , new Coord(Math.round(points.getX(index).floatValue()*scale), Math.round(points.getY(index).floatValue()*scale))
-                                , 20);
+                                , bladeWidth);
         if (oldSquare != null) {
             if(MathUtils.isInsideSquare(square[0], oldSquare)) {
-                coord = new int[][] {new int[] {oldSquare[1].x, oldSquare[3].x, square[1].x, square[3].x, square[2].x, oldSquare[2].x, oldSquare[0].x}
-                , new int[] {oldSquare[1].y, oldSquare[3].y, square[1].y, square[3].y, square[2].y, oldSquare[2].y, oldSquare[0].y}};
-            } else if (MathUtils.isInsideSquare(square[1], oldSquare)) {
-                coord = new int[][] {new int[] {oldSquare[1].x, oldSquare[3].x, square[3].x, square[2].x, square[1].x, oldSquare[2].x, oldSquare[0].x}
-                , new int[] {oldSquare[1].y, oldSquare[3].y, square[3].y, square[2].y, square[1].y, oldSquare[2].y, oldSquare[0].y}};
+                coord = new int[][] {
+                        new int[] {oldSquare[0].x, oldSquare[3].x, square[3].x, square[2].x, square[1].x, oldSquare[2].x, oldSquare[1].x}, 
+                        new int[] {oldSquare[0].y, oldSquare[3].y, square[3].y, square[2].y, square[1].y, oldSquare[2].y, oldSquare[1].y}};
             } else {
-                coord = new int[][] {new int[] {square[0].x, square[1].x, square[2].x, square[3].x}
-                , new int[] {square[0].y, square[1].y, square[2].y, square[3].y}};
+                coord = new int[][] {
+                        new int[] {oldSquare[0].x, oldSquare[3].x, square[0].x, square[3].x, square[2].x, oldSquare[2].x, oldSquare[1].x}, 
+                        new int[] {oldSquare[0].y, oldSquare[3].y, square[0].y, square[3].y, square[2].y, oldSquare[2].y, oldSquare[1].y}};
             }
         } else {
-            coord = new int[][] {new int[] {square[0].x, square[1].x, square[2].x, square[3].x}
-            , new int[] {square[0].y, square[1].y, square[2].y, square[3].y}};
+            coord = new int[][] {
+                    new int[] {square[0].x, square[3].x, square[2].x, square[1].x}, 
+                    new int[] {square[0].y, square[3].y, square[2].y, square[1].y}};
         }
         oldSquare = square;
         return coord;
+    }
+    
+    private void drawSupportingLine(Graphics g) {
+        int i = bladeWidth/2;
+        g.foreColor = Color.RED;
+        for(;i < getWidth(); i+=bladeWidth) {
+            g.drawThickLine(i, 0, i, getHeight(), 5);
+        }
     }
 }
 

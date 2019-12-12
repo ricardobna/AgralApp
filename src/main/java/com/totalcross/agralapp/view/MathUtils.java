@@ -12,10 +12,10 @@ public class MathUtils {
         Coord aPoint = new Coord(point.x - squarePoints[p1].x, point.y - squarePoints[p1].y);
 
         return
-                 dotProduct(p1p2, aPoint) > 0
-                && dotProduct(p1p2, aPoint) < dotProduct(p1p2, p1p2)
-                && dotProduct(p1p4, aPoint) > 0
-                && dotProduct(p1p4, aPoint) < dotProduct(p1p4, p1p4)
+                 dotProduct(p1p2, aPoint) >= 0
+                && dotProduct(p1p2, aPoint) <= dotProduct(p1p2, p1p2)
+                && dotProduct(p1p4, aPoint) >= 0
+                && dotProduct(p1p4, aPoint) <= dotProduct(p1p4, p1p4)
         ;
     }
 

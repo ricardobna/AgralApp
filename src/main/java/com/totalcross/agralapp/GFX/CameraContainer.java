@@ -11,7 +11,6 @@ import totalcross.ui.ClippedContainer;
 import totalcross.ui.MainWindow;
 import totalcross.ui.Window;
 import totalcross.ui.event.UpdateListener;
-import totalcross.ui.gfx.Color;
 import totalcross.ui.gfx.Coord;
 import totalcross.ui.gfx.Graphics;
 
@@ -20,13 +19,17 @@ public class CameraContainer extends ClippedContainer {
     private int lineColor;
     Acquisitor points;
     int index = 1;
-    int millisecondsToUpdate = 100;
+    int millisecondsToUpdate = 150;
     int elapsedMilliseconds = 0;
     Coord[] oldSquare = null;
     int scale = 300;
     int bladeWidth = 160;
     int xVariation;
     int yVariation;
+    int lastPolygonX0;
+    int lastPolygonY0;
+    int lastPolygonX1;
+    int lastPolygonY1;
     Vector<int[][]> polygonsToDraw = new Vector<>(20);
     UpdateListener updateListener = new UpdateListener(){
         
@@ -35,15 +38,11 @@ public class CameraContainer extends ClippedContainer {
             CameraContainer.this.elapsedMilliseconds += elapsedMilliseconds;
             if (CameraContainer.this.elapsedMilliseconds >= millisecondsToUpdate) {
                 CameraContainer.this.elapsedMilliseconds = 0;
-                if(polygonsToDraw == null) {
-                    polygonsToDraw = new Vector<>(20);
-                }
                 polygonsToDraw.add(getPolygonToDraw(index));
                 xVariation = CameraContainer.this.getWidth()/2 - Math.round(CameraContainer.this.points.getX(index).floatValue() * scale);
                 yVariation = CameraContainer.this.getHeight()/2 - Math.round(CameraContainer.this.points.getY(index).floatValue() * scale);
                 
                 Window.repaintActiveWindows();
-                // repaint();
                 index++;
                 if (index > points.size() - 1) {
                     MainWindow.getMainWindow().removeUpdateListener(updateListener);
@@ -62,7 +61,7 @@ public class CameraContainer extends ClippedContainer {
             e.printStackTrace();
         }
     }
-
+    
     @Override
     public void onPaint(Graphics g) {
         //Draws the line to try and focus
@@ -73,7 +72,7 @@ public class CameraContainer extends ClippedContainer {
             fillTranslatedPolygon(xVariation, yVariation, g, polygon);
         }
         g.backColor = oldColor;
-        // drawSupportingLine(g);
+        g.drawThickLine(lastPolygonX0 + xVariation, lastPolygonY0 + yVariation, lastPolygonX1 + xVariation, lastPolygonY1 + yVariation, 2);
     }
 
     public void setLineColor(int lineColor) {
@@ -101,18 +100,15 @@ public class CameraContainer extends ClippedContainer {
                     new int[] {square[0].x, square[3].x, square[2].x, square[1].x}, 
                     new int[] {square[0].y, square[3].y, square[2].y, square[1].y}};
         }
+        lastPolygonX0 = square[3].x;
+        lastPolygonY0 = square[3].y;
+        lastPolygonY1 = square[2].y;
+        lastPolygonX1 = square[2].x;
+
         oldSquare = square;
         return coord;
     }
     
-    private void drawSupportingLine(Graphics g) {
-        int i = bladeWidth/2;
-        g.foreColor = Color.RED;
-        for(;i < getWidth(); i+=bladeWidth) {
-            g.drawThickLine(i, 0, i, getHeight(), 5);
-        }
-    }
-
     private void fillTranslatedPolygon(int xVariation, int yVariation, Graphics g, int[][] polygon) {
         int[] xPolygon = new int[polygon[0].length];
         int[] yPolygon = new int[polygon[1].length];
